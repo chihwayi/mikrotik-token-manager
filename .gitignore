@@ -10,3 +10,6 @@ build/
 # Seed scripts (local only)
 backend/scripts/seed-*.js
 
+# Mock RouterOS (local testing only)
+mock-routeros/
+
