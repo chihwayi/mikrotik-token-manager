@@ -35,6 +35,7 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, type = 'war
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -43,13 +44,17 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, type = 'war
         </div>
         <div className="flex space-x-3 pt-4 border-t border-gray-200">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             {cancelText}
           </button>
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               onConfirm();
               onClose();
             }}

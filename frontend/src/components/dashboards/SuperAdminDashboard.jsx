@@ -90,6 +90,19 @@ const SuperAdminDashboard = () => {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    // Custom validation
+    if (!userForm.email || !userForm.email.trim()) {
+      toast.error('Please enter an email address');
+      return;
+    }
+    if (!userForm.password || userForm.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+    if (!userForm.role) {
+      toast.error('Please select a role');
+      return;
+    }
     try {
       await adminAPI.createUser(userForm);
       toast.success('User created successfully!');
@@ -114,6 +127,27 @@ const SuperAdminDashboard = () => {
 
   const handleCreateRouter = async (e) => {
     e.preventDefault();
+    // Custom validation
+    if (!routerForm.name || !routerForm.name.trim()) {
+      toast.error('Please enter a router name');
+      return;
+    }
+    if (!routerForm.location || !routerForm.location.trim()) {
+      toast.error('Please enter a location');
+      return;
+    }
+    if (!routerForm.ip_address || !routerForm.ip_address.trim()) {
+      toast.error('Please enter an IP address');
+      return;
+    }
+    if (!routerForm.api_username || !routerForm.api_username.trim()) {
+      toast.error('Please enter an API username');
+      return;
+    }
+    if (!routerForm.apiPassword || !routerForm.apiPassword.trim()) {
+      toast.error('Please enter an API password');
+      return;
+    }
     try {
       await routerAPI.create(routerForm);
       toast.success('Router created successfully!');
@@ -128,6 +162,23 @@ const SuperAdminDashboard = () => {
 
   const handleUpdateRouter = async (e) => {
     e.preventDefault();
+    // Custom validation
+    if (!routerForm.name || !routerForm.name.trim()) {
+      toast.error('Please enter a router name');
+      return;
+    }
+    if (!routerForm.location || !routerForm.location.trim()) {
+      toast.error('Please enter a location');
+      return;
+    }
+    if (!routerForm.ip_address || !routerForm.ip_address.trim()) {
+      toast.error('Please enter an IP address');
+      return;
+    }
+    if (!routerForm.api_username || !routerForm.api_username.trim()) {
+      toast.error('Please enter an API username');
+      return;
+    }
     try {
       await routerAPI.update(editingRouter.id, routerForm);
       toast.success('Router updated successfully!');
@@ -461,12 +512,11 @@ const SuperAdminDashboard = () => {
                         <X className="w-5 h-5 text-gray-500" />
                       </button>
                     </div>
-                    <form onSubmit={handleCreateUser} className="space-y-4">
+                    <form onSubmit={handleCreateUser} className="space-y-4" noValidate>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                         <input
                           type="email"
-                          required
                           value={userForm.email}
                           onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -477,7 +527,6 @@ const SuperAdminDashboard = () => {
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                         <input
                           type="password"
-                          required
                           value={userForm.password}
                           onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -648,7 +697,10 @@ const SuperAdminDashboard = () => {
                     </div>
                     <div className="flex space-x-2 mt-4 pt-4 border-t border-gray-200">
                       <button
-                        onClick={() => {
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           setEditingPackage(pkg);
                           setPackageForm({
                             name: pkg.name,
@@ -666,7 +718,10 @@ const SuperAdminDashboard = () => {
                         <span>Edit</span>
                       </button>
                         <button
-                          onClick={() => {
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setConfirmDialog({
                               isOpen: true,
                               title: pkg.active ? 'Deactivate Package?' : 'Activate Package?',
@@ -779,30 +834,28 @@ const SuperAdminDashboard = () => {
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
-              <form onSubmit={editingRouter ? handleUpdateRouter : handleCreateRouter} className="space-y-4">
+              <form onSubmit={editingRouter ? handleUpdateRouter : handleCreateRouter} className="space-y-4" noValidate>
                 {/* Row 1: Router Name and Location */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Router Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={routerForm.name}
-                      onChange={(e) => setRouterForm({ ...routerForm, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Main Router"
-                    />
+                      <input
+                        type="text"
+                        value={routerForm.name}
+                        onChange={(e) => setRouterForm({ ...routerForm, name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Main Router"
+                      />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Location *</label>
-                    <input
-                      type="text"
-                      required
-                      value={routerForm.location}
-                      onChange={(e) => setRouterForm({ ...routerForm, location: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Office Building A"
-                    />
+                      <input
+                        type="text"
+                        value={routerForm.location}
+                        onChange={(e) => setRouterForm({ ...routerForm, location: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Office Building A"
+                      />
                   </div>
                 </div>
 
@@ -844,14 +897,13 @@ const SuperAdminDashboard = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">IP Address *</label>
-                    <input
-                      type="text"
-                      required
-                      value={routerForm.ip_address}
-                      onChange={(e) => setRouterForm({ ...routerForm, ip_address: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono"
-                      placeholder="192.168.1.1"
-                    />
+                      <input
+                        type="text"
+                        value={routerForm.ip_address}
+                        onChange={(e) => setRouterForm({ ...routerForm, ip_address: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono"
+                        placeholder="192.168.1.1"
+                      />
                   </div>
                 </div>
 
@@ -869,14 +921,13 @@ const SuperAdminDashboard = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">API Username *</label>
-                    <input
-                      type="text"
-                      required
-                      value={routerForm.api_username}
-                      onChange={(e) => setRouterForm({ ...routerForm, api_username: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="admin"
-                    />
+                      <input
+                        type="text"
+                        value={routerForm.api_username}
+                        onChange={(e) => setRouterForm({ ...routerForm, api_username: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="admin"
+                      />
                   </div>
                 </div>
 
@@ -886,14 +937,13 @@ const SuperAdminDashboard = () => {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       API Password {editingRouter ? '(leave blank to keep current)' : '*'}
                     </label>
-                    <input
-                      type="password"
-                      required={!editingRouter}
-                      value={routerForm.apiPassword}
-                      onChange={(e) => setRouterForm({ ...routerForm, apiPassword: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Enter password"
-                    />
+                      <input
+                        type="password"
+                        value={routerForm.apiPassword}
+                        onChange={(e) => setRouterForm({ ...routerForm, apiPassword: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder={editingRouter ? "Enter password (leave blank to keep current)" : "Enter password"}
+                      />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Router Model (Optional)</label>
@@ -952,6 +1002,23 @@ const SuperAdminDashboard = () => {
               </div>
               <form onSubmit={async (e) => {
                 e.preventDefault();
+                // Custom validation instead of browser validation
+                if (!packageForm.name || !packageForm.name.trim()) {
+                  toast.error('Please enter a package name');
+                  return;
+                }
+                if (!packageForm.durationHours || packageForm.durationHours < 1) {
+                  toast.error('Please enter a valid duration (minimum 1 hour)');
+                  return;
+                }
+                if (!packageForm.dataLimitMb || packageForm.dataLimitMb < 1) {
+                  toast.error('Please enter a valid data limit (minimum 1 MB)');
+                  return;
+                }
+                if (!packageForm.price || packageForm.price < 0) {
+                  toast.error('Please enter a valid price');
+                  return;
+                }
                 try {
                   if (editingPackage) {
                     await packageAPI.update(editingPackage.id, packageForm);
@@ -967,24 +1034,22 @@ const SuperAdminDashboard = () => {
                 } catch (error) {
                   toast.error(error.response?.data?.error || `Failed to ${editingPackage ? 'update' : 'create'} package`);
                 }
-              }} className="space-y-4">
+              }} className="space-y-4" noValidate>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Package Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={packageForm.name}
-                    onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., 3 Hours Package"
-                  />
+                    <input
+                      type="text"
+                      value={packageForm.name}
+                      onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="e.g., 3 Hours Package"
+                    />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Duration (Hours) *</label>
                     <input
                       type="number"
-                      required
                       min="1"
                       value={packageForm.durationHours}
                       onChange={(e) => setPackageForm({ ...packageForm, durationHours: parseInt(e.target.value) || '' })}
@@ -996,7 +1061,6 @@ const SuperAdminDashboard = () => {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Data Limit (MB) *</label>
                     <input
                       type="number"
-                      required
                       min="1"
                       value={packageForm.dataLimitMb}
                       onChange={(e) => setPackageForm({ ...packageForm, dataLimitMb: parseInt(e.target.value) || '' })}
@@ -1009,7 +1073,6 @@ const SuperAdminDashboard = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Price (USD) *</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     step="0.01"
                     value={packageForm.price}
