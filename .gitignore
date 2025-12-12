@@ -7,3 +7,6 @@ build/
 .vscode/
 .idea/
 
+# Seed scripts (local only)
+backend/scripts/seed-*.js
+
