@@ -82,20 +82,6 @@ services:
       - mikrotik_network
     restart: unless-stopped
 
-  # Mock MikroTik RouterOS API Server (for testing)
-  mock-routeros:
-    build:
-      context: ./mock-routeros
-      dockerfile: Dockerfile
-    container_name: mikrotik_mock_router
-    ports:
-      - "8728:8728"
-    networks:
-      - mikrotik_network
-    restart: unless-stopped
-    environment:
-      - MOCK_ROUTEROS_PORT=8728
-
 volumes:
   postgres_data:
     driver: local

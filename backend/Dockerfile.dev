@@ -14,3 +14,4 @@ EXPOSE 3000
 # Start with nodemon for hot reload
 CMD ["npm", "run", "dev"]
 
+

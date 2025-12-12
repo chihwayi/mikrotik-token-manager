@@ -20,3 +20,4 @@ export const getAllProvinces = () => {
   return Object.keys(zimbabweProvinces);
 };
 
+
