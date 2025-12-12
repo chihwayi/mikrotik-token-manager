@@ -4,22 +4,34 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Load user credentials from environment variables
+// Copy this file to seed-users.js and set the following in your .env:
+//
+// SEED_ADMIN_EMAIL=admin@mikrotik.local
+// SEED_ADMIN_PASSWORD=YourSecurePassword123!
+// SEED_MANAGER_EMAIL=manager@mikrotik.local
+// SEED_MANAGER_PASSWORD=YourSecurePassword123!
+// SEED_STAFF_EMAIL=staff@mikrotik.local
+// SEED_STAFF_PASSWORD=YourSecurePassword123!
+//
+// NEVER commit seed-users.js to git - it's in .gitignore for security
+
 const users = [
   {
-    email: 'admin@mikrotik.local',
-    password: 'Admin123!',
+    email: process.env.SEED_ADMIN_EMAIL || 'admin@mikrotik.local',
+    password: process.env.SEED_ADMIN_PASSWORD || '',
     role: 'super_admin',
     assignedRouterId: null
   },
   {
-    email: 'manager@mikrotik.local',
-    password: 'Manager123!',
+    email: process.env.SEED_MANAGER_EMAIL || 'manager@mikrotik.local',
+    password: process.env.SEED_MANAGER_PASSWORD || '',
     role: 'manager',
     assignedRouterId: null
   },
   {
-    email: 'staff@mikrotik.local',
-    password: 'Staff123!',
+    email: process.env.SEED_STAFF_EMAIL || 'staff@mikrotik.local',
+    password: process.env.SEED_STAFF_PASSWORD || '',
     role: 'staff',
     assignedRouterId: null // Will be assigned after router is added
   }
@@ -32,6 +44,15 @@ async function seedUsers() {
     await client.query('BEGIN');
     
     console.log('🌱 Seeding users...\n');
+    
+    // Validate that passwords are provided
+    for (const userData of users) {
+      if (!userData.password || userData.password.trim() === '') {
+        console.error(`❌ Error: Password not provided for ${userData.email}`);
+        console.error(`   Please set the corresponding environment variable in your .env file`);
+        throw new Error(`Missing password for user: ${userData.email}`);
+      }
+    }
     
     for (const userData of users) {
       // Check if user already exists
@@ -62,20 +83,14 @@ async function seedUsers() {
     await client.query('COMMIT');
     
     console.log('\n✨ User seeding completed!\n');
-    console.log('📋 Login Credentials:');
+    console.log('📋 Seeded Users:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Super Admin:');
-    console.log('  Email:    admin@mikrotik.local');
-    console.log('  Password: Admin123!');
-    console.log('');
-    console.log('Manager:');
-    console.log('  Email:    manager@mikrotik.local');
-    console.log('  Password: Manager123!');
-    console.log('');
-    console.log('Staff:');
-    console.log('  Email:    staff@mikrotik.local');
-    console.log('  Password: Staff123!');
+    for (const userData of users) {
+      console.log(`${userData.role}: ${userData.email}`);
+    }
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('⚠️  Passwords are stored securely and not displayed here.');
+    console.log('   They are defined in your .env file.\n');
     
   } catch (error) {
     await client.query('ROLLBACK');
