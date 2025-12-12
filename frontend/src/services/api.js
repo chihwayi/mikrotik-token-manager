@@ -6,7 +6,8 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 120000 // 2 minutes timeout (increased for bulk operations)
 });
 
 api.interceptors.request.use((config) => {
@@ -19,13 +20,19 @@ api.interceptors.request.use((config) => {
 
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData)
+  register: (userData) => api.post('/auth/register', userData),
+  getMe: () => api.get('/auth/me')
 };
 
 export const tokenAPI = {
   generate: (packageId) => api.post('/tokens/generate', { packageId }),
+  generateBulk: (tokenRequests) => api.post('/tokens/generate-bulk', { tokenRequests }),
   getMyTokens: () => api.get('/tokens/my-tokens'),
   getAllTokens: (filters) => api.get('/tokens/all', { params: filters })
+};
+
+export const pdfAPI = {
+  generateTokenPDF: (tokenIds) => api.post('/pdf/tokens', { tokenIds }, { responseType: 'blob' })
 };
 
 export const routerAPI = {

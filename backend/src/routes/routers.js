@@ -45,14 +45,38 @@ router.post('/',
   authenticateToken,
   requireRole('super_admin', 'manager'),
   async (req, res) => {
+    console.log('📥 POST /api/routers - Request received');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
     try {
+      // Validate required fields
+      const ipAddress = req.body.ip_address || req.body.ipAddress;
+      if (!ipAddress || typeof ipAddress !== 'string' || ipAddress.trim() === '') {
+        return res.status(400).json({ error: 'IP address is required and cannot be empty' });
+      }
+
+      if (!req.body.name || typeof req.body.name !== 'string' || req.body.name.trim() === '') {
+        return res.status(400).json({ error: 'Router name is required' });
+      }
+
+      if (!req.body.location || typeof req.body.location !== 'string' || req.body.location.trim() === '') {
+        return res.status(400).json({ error: 'Location is required' });
+      }
+
+      if (!req.body.api_username && !req.body.apiUsername) {
+        return res.status(400).json({ error: 'API username is required' });
+      }
+
+      if (!req.body.api_password_encrypted && !req.body.apiPassword) {
+        return res.status(400).json({ error: 'API password is required' });
+      }
+
       // Accept both api_password_encrypted and apiPassword for flexibility
       const routerData = {
-        name: req.body.name,
-        location: req.body.location,
-        ip_address: req.body.ip_address || req.body.ipAddress,
+        name: req.body.name.trim(),
+        location: req.body.location.trim(),
+        ip_address: ipAddress.trim(),
         api_port: req.body.api_port || req.body.apiPort || 8728,
-        api_username: req.body.api_username || req.body.apiUsername,
+        api_username: (req.body.api_username || req.body.apiUsername).trim(),
         api_password_encrypted: req.body.api_password_encrypted || req.body.apiPassword,
         router_model: req.body.router_model || req.body.routerModel || null,
         province: req.body.province || null,
@@ -61,8 +85,11 @@ router.post('/',
       };
 
       const router = await routerService.addRouter(routerData);
+      console.log('✅ Router created successfully:', router.id);
       res.status(201).json(router);
     } catch (error) {
+      console.error('❌ Error creating router:', error.message);
+      console.error('Error stack:', error.stack);
       res.status(400).json({ error: error.message });
     }
   }
@@ -112,9 +139,87 @@ router.post('/:id/test',
   requireRole('super_admin', 'manager'),
   async (req, res) => {
     try {
-      const result = await mikrotikService.testConnection(req.params.id);
+      console.log(`🧪 Testing connection for router ${req.params.id}...`);
+      
+      // Add timeout wrapper to prevent hanging
+      const testPromise = mikrotikService.testConnection(req.params.id);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000)
+      );
+      
+      const result = await Promise.race([testPromise, timeoutPromise]);
+      console.log(`🧪 Connection test result:`, JSON.stringify(result, null, 2));
+      
+      // Update router health status based on test result
+      try {
+        if (result.success) {
+          console.log(`✅ Connection successful - updating health to ONLINE for router ${req.params.id}`);
+          await routerService.updateRouterHealth(req.params.id, {
+            isOnline: true,
+            activeUsers: null,
+            cpuUsage: null,
+            memoryUsage: null,
+            bandwidthUsage: null
+          });
+          console.log(`✅ Health status updated to ONLINE`);
+        } else {
+          console.log(`❌ Connection failed - updating health to OFFLINE for router ${req.params.id}`);
+          await routerService.updateRouterHealth(req.params.id, {
+            isOnline: false,
+            activeUsers: 0,
+            cpuUsage: null,
+            memoryUsage: null,
+            bandwidthUsage: null
+          });
+          console.log(`✅ Health status updated to OFFLINE`);
+        }
+      } catch (healthError) {
+        console.error(`❌ Failed to update health status:`, healthError);
+      }
+      
+      // Return success even if connection failed, but include the result
       res.json(result);
     } catch (error) {
+      console.error(`❌ Error testing router connection:`, error);
+      
+      // Update health status as offline on error
+      try {
+        await routerService.updateRouterHealth(req.params.id, {
+          isOnline: false,
+          activeUsers: 0,
+          cpuUsage: null,
+          memoryUsage: null,
+          bandwidthUsage: null
+        });
+      } catch (healthError) {
+        console.error('Failed to update health status:', healthError);
+      }
+      
+      // Return a proper error response instead of 500
+      const errorMessage = error?.message || 'Unknown error occurred';
+      res.status(200).json({ 
+        success: false, 
+        message: `Connection test failed: ${errorMessage}` 
+      });
+    }
+  }
+);
+
+// Manual health check endpoint (checks all routers)
+router.post('/health-check',
+  authenticateToken,
+  requireRole('super_admin', 'manager'),
+  async (req, res) => {
+    try {
+      console.log('🩺 Manual health check triggered...');
+      const results = await routerService.checkAllRoutersHealth();
+      res.json({ 
+        success: true, 
+        message: `Health check completed for ${results.length} routers`,
+        results 
+      });
+    } catch (error) {
+      console.error('❌ Error running health check:', error);
       res.status(500).json({ error: error.message });
     }
   }

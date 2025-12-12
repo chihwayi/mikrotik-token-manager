@@ -43,6 +43,22 @@ app.use('/api/packages', packageRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 
+// PDF routes (loaded conditionally)
+let pdfRoutesLoaded = false;
+(async () => {
+  try {
+    const pdfRoutes = (await import('./routes/pdf.js')).default;
+    app.use('/api/pdf', pdfRoutes);
+    pdfRoutesLoaded = true;
+    console.log('✅ PDF routes loaded successfully');
+  } catch (error) {
+    console.warn('⚠️  PDF routes not loaded:', error.message);
+    app.post('/api/pdf/*', (req, res) => {
+      res.status(503).json({ error: 'PDF generation is temporarily unavailable.' });
+    });
+  }
+})();
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -1,4 +1,4 @@
-import RouterOSAPI from 'node-routeros';
+import { RouterOSAPI } from 'node-routeros';
 import pool from '../config/database.js';
 import { decrypt } from '../utils/encryption.js';
 import mikrotikConfig from '../config/mikrotik.js';
@@ -84,14 +84,180 @@ class MikroTikService {
    * Test router connectivity without caching
    */
   async testConnection(routerId) {
-    const { connection } = await this.getRouterConnection(routerId, false);
+    const timeoutMs = 10000; // 10 seconds timeout
+    let connection;
+    
     try {
-      await connection.write(mikrotikConfig.paths.system.identity + '/print');
+      // Wrap connection in timeout
+      const connectionPromise = this.getRouterConnection(routerId, false);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), timeoutMs)
+      );
+      
+      const result = await Promise.race([connectionPromise, timeoutPromise]);
+      connection = result.connection;
+      
+      // Test the connection with another timeout
+      const testPromise = connection.write(mikrotikConfig.paths.system.identity + '/print');
+      const testTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection test timeout after 8 seconds')), 8000)
+      );
+      
+      await Promise.race([testPromise, testTimeoutPromise]);
+      
       return { success: true, message: 'Connection successful' };
     } catch (error) {
-      return { success: false, message: error.message };
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('timeout')) {
+        return { 
+          success: false, 
+          message: `Connection timeout. The router may be slow or unreachable. Please check network connectivity and router status.` 
+        };
+      } else if (errorMessage.includes('ECONNREFUSED')) {
+        return { 
+          success: false, 
+          message: `Connection refused. Check if router is accessible and the API port is correct.` 
+        };
+      } else if (errorMessage.includes('invalid user') || errorMessage.includes('password') || errorMessage.includes('authentication')) {
+        return { 
+          success: false, 
+          message: `Authentication failed. Please check username and password.` 
+        };
+      } else {
+        return { 
+          success: false, 
+          message: `Connection test failed: ${errorMessage}` 
+        };
+      }
     } finally {
-      connection.close();
+      if (connection && !connection.closed) {
+        try {
+          connection.close();
+        } catch (closeError) {
+          // Ignore close errors
+        }
+      }
+    }
+  }
+
+  /**
+   * Test router connection with direct parameters (for new router testing)
+   * This doesn't require a router record in the database
+   */
+  async testConnectionDirect({ ipAddress, apiPort = 8728, apiUsername, apiPassword }) {
+    let connection;
+    const timeoutMs = (mikrotikConfig.defaultTimeout || 10) * 1000; // 10 seconds default
+    
+    try {
+      if (!ipAddress || !apiUsername || !apiPassword) {
+        return { success: false, message: 'IP address, username, and password are required' };
+      }
+
+      console.log(`🔌 Attempting connection to ${ipAddress}:${apiPort} with timeout ${timeoutMs}ms`);
+
+      // Create a promise that will timeout
+      const connectionPromise = (async () => {
+        connection = new RouterOSAPI({
+          host: ipAddress,
+          user: apiUsername,
+          password: apiPassword,
+          port: apiPort || mikrotikConfig.defaultPort,
+          timeout: timeoutMs
+        });
+
+        await connection.connect();
+        console.log('✅ Connected to router');
+        
+        // Test the connection by querying router identity
+        const identity = await connection.write(mikrotikConfig.paths.system.identity + '/print');
+        
+        // If we got a response (even if empty), connection is successful
+        const routerName = identity && identity[0] ? identity[0].name : 'Unknown';
+        
+        return { 
+          success: true, 
+          message: `Connection successful${routerName !== 'Unknown' ? ` (Router: ${routerName})` : ''}` 
+        };
+      })();
+
+      // Add timeout wrapper
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Connection timeout after ${mikrotikConfig.defaultTimeout} seconds`));
+        }, timeoutMs + 1000); // Add 1 second buffer
+      });
+
+      const result = await Promise.race([connectionPromise, timeoutPromise]);
+      
+      // Close connection if still open
+      if (connection && !connection.closed) {
+        try {
+          connection.close();
+        } catch (closeError) {
+          // Ignore close errors
+        }
+      }
+      
+      return result;
+      
+    } catch (error) {
+      // Close connection on error
+      if (connection) {
+        try {
+          if (!connection.closed) {
+            connection.close();
+          }
+        } catch (closeError) {
+          // Ignore close errors
+        }
+      }
+      
+      // Provide more specific error messages
+      console.error('Connection test error:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack?.split('\n')[0],
+        fullError: error.toString()
+      });
+      
+      let errorMessage = 'Unknown error';
+      
+      // Extract error message from various possible sources
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.toString && error.toString() !== '[object Object]') {
+        errorMessage = error.toString();
+      } else if (error.code) {
+        errorMessage = `Error code: ${error.code}`;
+      }
+      
+      // Map common error codes to user-friendly messages
+      if (error.code === 'ECONNREFUSED') {
+        errorMessage = `Connection refused. Check if router is accessible at ${ipAddress}:${apiPort}. Make sure the router is running and the port is correct.`;
+      } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET') {
+        errorMessage = `Connection timeout. Router may be unreachable at ${ipAddress}:${apiPort}. Check network connectivity.`;
+      } else if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') {
+        errorMessage = `Could not resolve hostname ${ipAddress}. Check if the IP address or hostname is correct.`;
+      } else if (error.message && (error.message.includes('invalid user') || error.message.includes('password') || error.message.includes('authentication'))) {
+        errorMessage = 'Invalid username or password. Please check your credentials.';
+      } else if (error.message && error.message.includes('timeout')) {
+        errorMessage = `Connection timeout after ${mikrotikConfig.defaultTimeout} seconds. The router may be slow or unreachable.`;
+      }
+      
+      return { success: false, message: errorMessage };
+    } finally {
+      if (connection) {
+        try {
+          if (!connection.closed) {
+            connection.close();
+          }
+        } catch (closeError) {
+          // Ignore errors when closing
+        }
+      }
     }
   }
 
@@ -99,26 +265,55 @@ class MikroTikService {
    * Get router information (model, identity, etc.)
    */
   async getRouterInfo(routerId) {
-    const { connection } = await this.getRouterConnection(routerId);
+    const timeoutMs = 8000; // 8 second timeout for getting router info
+    let connection;
     
     try {
+      // Wrap connection in timeout
+      const connectionPromise = this.getRouterConnection(routerId);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), timeoutMs)
+      );
+      
+      const result = await Promise.race([connectionPromise, timeoutPromise]);
+      connection = result.connection;
+      
+      // Query router info with individual timeouts
+      const queryTimeout = 5000; // 5 seconds per query
+      const queryWithTimeout = (promise) => 
+        Promise.race([
+          promise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout')), queryTimeout)
+          )
+        ]);
+      
       const [identity, routerboard, resources] = await Promise.all([
-        connection.write(mikrotikConfig.paths.system.identity + '/print').catch(() => []),
-        connection.write(mikrotikConfig.paths.system.routerboard + '/print').catch(() => []),
-        connection.write(mikrotikConfig.paths.system.resources + '/print').catch(() => [])
+        queryWithTimeout(connection.write(mikrotikConfig.paths.system.identity + '/print')).catch(() => []),
+        queryWithTimeout(connection.write(mikrotikConfig.paths.system.routerboard + '/print')).catch(() => []),
+        queryWithTimeout(connection.write(mikrotikConfig.paths.system.resources + '/print')).catch(() => [])
       ]);
 
       return {
         identity: identity[0]?.name || 'Unknown',
         model: routerboard[0]?.model || 'Unknown',
-        serialNumber: routerboard[0]?.serial-number || 'N/A',
-        firmware: routerboard[0]?.current-firmware || 'N/A',
+        serialNumber: routerboard[0]?.['serial-number'] || 'N/A',
+        firmware: routerboard[0]?.['current-firmware'] || 'N/A',
         cpu: resources[0]?.cpu || 0,
         memory: resources[0]?.['free-memory'] || 0,
         uptime: resources[0]?.uptime || '0s'
       };
     } catch (error) {
       throw new Error(`Failed to get router info: ${error.message}`);
+    } finally {
+      // Close connection if it was opened
+      if (connection && !connection.closed) {
+        try {
+          connection.close();
+        } catch (closeError) {
+          // Ignore close errors
+        }
+      }
     }
   }
 

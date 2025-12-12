@@ -126,7 +126,12 @@ const SuperAdminDashboard = () => {
   };
 
   const handleCreateRouter = async (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('handleCreateRouter called', routerForm);
+    
     // Custom validation
     if (!routerForm.name || !routerForm.name.trim()) {
       toast.error('Please enter a router name');
@@ -149,14 +154,20 @@ const SuperAdminDashboard = () => {
       return;
     }
     try {
-      await routerAPI.create(routerForm);
+      console.log('Creating router with data:', routerForm);
+      const response = await routerAPI.create(routerForm);
+      console.log('Router creation response:', response);
       toast.success('Router created successfully!');
       setShowRouterForm(false);
       setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '' });
       setAvailableDistricts([]);
       loadData();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create router');
+      console.error('Error creating router:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create router';
+      toast.error(errorMessage);
     }
   };
 
@@ -206,9 +217,17 @@ const SuperAdminDashboard = () => {
     setTestingRouter(routerId);
     try {
       const result = await routerAPI.testConnection(routerId);
-      toast.success(result.message || 'Connection test successful!');
+      if (result.success) {
+        toast.success(result.message || 'Connection test successful!');
+      } else {
+        toast.error(result.message || 'Connection test failed');
+      }
+      // Refresh router list to get updated health status
+      await loadData();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Connection test failed');
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Connection test failed');
+      // Refresh router list even on error to get latest status
+      await loadData();
     } finally {
       setTimeout(() => setTestingRouter(null), 1000);
     }
@@ -817,8 +836,19 @@ const SuperAdminDashboard = () => {
 
         {/* Router Form Modal */}
         {(showRouterForm || editingRouter) && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowRouterForm(false);
+              setEditingRouter(null);
+              setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '' });
+              setAvailableDistricts([]);
+            }}
+          >
+            <div 
+              className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                   {editingRouter ? 'Edit Router' : 'Add New Router'}
