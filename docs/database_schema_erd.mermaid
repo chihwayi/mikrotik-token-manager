@@ -1,0 +1,154 @@
+erDiagram
+    USERS ||--o{ TOKEN_TRANSACTIONS : generates
+    USERS ||--o{ AUDIT_LOGS : performs
+    USERS ||--o{ SESSIONS : has
+    USERS }o--|| ROUTERS : assigned_to
+    
+    ROUTERS ||--o{ TOKEN_TRANSACTIONS : receives
+    ROUTERS ||--o{ USAGE_LOGS : reports
+    ROUTERS ||--o{ ROUTER_HEALTH : monitors
+    
+    TOKEN_PACKAGES ||--o{ TOKEN_TRANSACTIONS : uses
+    
+    TOKEN_TRANSACTIONS ||--o| USAGE_LOGS : tracks
+    TOKEN_TRANSACTIONS ||--o{ REVENUE_RECORDS : generates
+    
+    RECONCILIATION_REPORTS ||--o{ REVENUE_RECORDS : summarizes
+    RECONCILIATION_REPORTS }o--|| ROUTERS : for_location
+    
+    ALERTS }o--|| USERS : assigned_to
+    ALERTS }o--|| ROUTERS : related_to
+
+    USERS {
+        uuid id PK
+        string email UK
+        string password_hash
+        enum role "super_admin, manager, staff"
+        uuid assigned_router_id FK
+        boolean active
+        timestamp created_at
+        timestamp last_login
+    }
+
+    ROUTERS {
+        uuid id PK
+        string name UK
+        string location
+        string ip_address UK
+        int api_port
+        string api_username
+        string api_password_encrypted
+        string router_model
+        boolean active
+        timestamp last_sync
+        timestamp created_at
+    }
+
+    TOKEN_PACKAGES {
+        uuid id PK
+        string name UK
+        int duration_hours
+        int data_limit_mb
+        decimal price
+        string description
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    TOKEN_TRANSACTIONS {
+        uuid id PK
+        string voucher_code UK
+        uuid package_id FK
+        uuid staff_id FK
+        uuid router_id FK
+        enum status "pending, active, expired, used"
+        decimal expected_revenue
+        timestamp generated_at
+        timestamp activated_at
+        timestamp expires_at
+        string client_mac
+        string client_ip
+    }
+
+    USAGE_LOGS {
+        uuid id PK
+        uuid transaction_id FK
+        uuid router_id FK
+        string voucher_code
+        bigint bytes_uploaded
+        bigint bytes_downloaded
+        bigint total_bytes
+        int session_duration_seconds
+        timestamp session_start
+        timestamp session_end
+        timestamp synced_at
+    }
+
+    REVENUE_RECORDS {
+        uuid id PK
+        uuid transaction_id FK
+        uuid staff_id FK
+        uuid router_id FK
+        decimal amount
+        enum payment_status "expected, confirmed, disputed"
+        timestamp recorded_at
+        string notes
+    }
+
+    RECONCILIATION_REPORTS {
+        uuid id PK
+        uuid router_id FK
+        date report_date
+        int tokens_generated
+        int tokens_used
+        decimal expected_revenue
+        decimal confirmed_revenue
+        decimal variance
+        json discrepancies
+        timestamp generated_at
+    }
+
+    SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        string session_token UK
+        timestamp clock_in
+        timestamp clock_out
+        boolean active
+        string ip_address
+    }
+
+    AUDIT_LOGS {
+        uuid id PK
+        uuid user_id FK
+        string action
+        string resource
+        json changes
+        string ip_address
+        timestamp created_at
+    }
+
+    ROUTER_HEALTH {
+        uuid id PK
+        uuid router_id FK
+        boolean is_online
+        int active_users
+        float cpu_usage
+        float memory_usage
+        bigint bandwidth_usage
+        timestamp checked_at
+    }
+
+    ALERTS {
+        uuid id PK
+        enum type "revenue_mismatch, unusual_activity, router_offline, token_abuse"
+        enum severity "low, medium, high, critical"
+        uuid user_id FK
+        uuid router_id FK
+        string message
+        json details
+        boolean resolved
+        timestamp created_at
+        timestamp resolved_at
+    }
