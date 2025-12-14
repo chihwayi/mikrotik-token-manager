@@ -1,15 +1,53 @@
-node_modules/
+# Environment files
 .env
+.env.local
+.env.production
+.env.development
+
+# Database credentials and seeds
+backend/scripts/seed-users.js
+backend/.env
+backend/.env.example
+
+# Sensitive documentation
+CREDENTIALS.md
+MIKROTIK_SETUP_GUIDE.md
+SETUP.md
+START_HERE.md
+QUICK_TEST.md
+QUICK_TEST_MIKROTIK.md
+REAL_ROUTER_REGISTRATION.md
+ROUTER_REGISTRATION_VALUES.md
+ROUTER_SETUP_GUIDE.md
+TEST_MIKROTIK.md
+
+# Migration files (contain schema details)
+backend/migrations/
+
+# Docker environment files
+docker-compose.yml
+docker-compose.dev.yml
+
+# Node modules
+node_modules/
+*/node_modules/
+
+# Logs
 *.log
-.DS_Store
-dist/
-build/
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# IDE
 .vscode/
 .idea/
 
-# Mock RouterOS (local testing only)
-mock-routeros/
+# OS
+.DS_Store
+Thumbs.db
 
-# Seed scripts (local only - contain sensitive credentials)
-backend/scripts/seed-*.js
-!backend/scripts/seed-*.example.js
+# Build outputs
+dist/
+build/

@@ -156,6 +156,13 @@ class MikroTikService {
       }
 
       console.log(`🔌 Attempting connection to ${ipAddress}:${apiPort} with timeout ${timeoutMs}ms`);
+      console.log(`📋 Connection details:`, {
+        host: ipAddress,
+        user: apiUsername,
+        password: apiPassword ? '***' : 'NOT_SET',
+        port: apiPort || mikrotikConfig.defaultPort,
+        timeout: timeoutMs
+      });
 
       // Create a promise that will timeout
       const connectionPromise = (async () => {

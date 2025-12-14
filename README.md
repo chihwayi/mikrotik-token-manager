@@ -1,230 +1,225 @@
 # MikroTik Token Management System
 
-A centralized token management system for monitoring and managing MikroTik routers across multiple locations. Designed for internet cafe businesses to track token generation, usage, revenue, and prevent staff corruption through comprehensive audit trails.
+A professional centralized token management system for MikroTik routers designed for internet cafe businesses.
 
-## Features
+## 🎯 Overview
 
-- **Centralized Token Management**: All tokens generated from central server, ensuring uniformity across all 45 routers
-- **Role-Based Access Control**: Three distinct user roles (Super Admin, Manager, Staff)
-- **Real-Time Monitoring**: Track token generation vs usage, bandwidth consumption, and router health
-- **Anti-Corruption Mechanisms**: Immutable audit logs, session control, and automated reconciliation
-- **Revenue Tracking**: Expected vs actual revenue tracking with variance detection
-- **MikroTik Integration**: Seamless integration with RouterOS API for all router operations
+This system provides centralized token generation and management across multiple MikroTik routers with comprehensive business features including revenue tracking, staff management, and audit trails.
 
-## System Architecture
+## ✨ Key Features
 
-```
-Client Layer (React Dashboards)
-    ↓
-API Gateway (Express.js)
-    ↓
-Business Logic Layer
-    ↓
-MikroTik Integration Layer
-    ↓
-Data Layer (PostgreSQL + Redis)
-```
+- **Centralized Management**: Control multiple MikroTik routers from one dashboard
+- **Role-Based Access**: Super Admin, Manager, and Staff roles with appropriate permissions
+- **Real-Time Integration**: Direct RouterOS API integration for instant token deployment
+- **Revenue Tracking**: Complete financial oversight with reconciliation reports
+- **Audit Trails**: Comprehensive logging for compliance and security
+- **Modern Interface**: React-based responsive web application
 
-## Project Structure
+## 🏗️ Architecture
 
 ```
-mikrotik-token-manager/
-├── backend/          # Node.js/Express API server
-│   ├── src/
-│   │   ├── config/      # Database & Redis config
-│   │   ├── middleware/  # Auth, roles, audit
-│   │   ├── models/      # Database models
-│   │   ├── services/    # Business logic
-│   │   ├── routes/      # API routes
-│   │   └── server.js    # Entry point
-│   └── migrations/      # Database migrations
-└── frontend/        # React application
-    └── src/
-        ├── components/   # React components
-        ├── services/     # API client
-        └── context/      # Auth context
+React Frontend → Express.js API → RouterOS API → MikroTik Routers
+                      ↓
+              PostgreSQL + Redis
 ```
 
-## Prerequisites
+## 🛠️ Technology Stack
 
-**For Docker setup (Recommended):**
-- Docker Desktop (or Docker Engine + Docker Compose)
-- 4GB+ RAM allocated to Docker
+- **Frontend**: React 18, Vite, Tailwind CSS
+- **Backend**: Node.js, Express.js, PostgreSQL, Redis
+- **Integration**: RouterOS API (node-routeros)
+- **Security**: JWT authentication, bcrypt, helmet.js
+- **Deployment**: Docker & Docker Compose
 
-**For local development:**
-- Node.js 18+ 
+## 📋 System Requirements
+
+- Node.js 18+
 - PostgreSQL 14+
 - Redis 6+
-- MikroTik RouterOS API access (v6+)
+- Docker (recommended)
+- MikroTik RouterOS 6.49+
 
-## Installation
+## 🚀 Quick Start
 
-### Option 1: Docker (Recommended) 🐳
-
-The easiest way to get started is using Docker Compose:
+### Docker Deployment (Recommended)
 
 ```bash
-# Start all services (PostgreSQL, Redis, Backend, Frontend)
+# Clone repository
+git clone [repository-url]
+cd mikrotik-token-manager
+
+# Start all services
 docker-compose up -d
 
-# Run database migrations
+# Initialize database
 docker-compose exec backend npm run migrate
-
-# Access the application
-# Frontend: http://localhost:5173
-# Backend API: http://localhost:3000
 ```
 
-For development with hot reload:
+### Manual Installation
+
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-See [README.DOCKER.md](./README.DOCKER.md) for detailed Docker instructions.
-
-### Option 2: Local Development
-
-#### Backend Setup
-
-1. Navigate to backend directory:
-```bash
+# Backend setup
 cd backend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Copy environment file:
-```bash
 cp .env.example .env
-```
-
-4. Update `.env` with your database and configuration details
-
-5. Ensure PostgreSQL and Redis are running locally
-
-6. Run database migrations:
-```bash
+# Configure .env file
 npm run migrate
-```
-
-7. Start the server:
-```bash
 npm run dev
-```
 
-#### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
+# Frontend setup
+cd ../frontend
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-## Database Schema
+## 🔧 Configuration
 
-The system uses PostgreSQL with the following key tables:
+### Environment Setup
 
-- **users**: User accounts with role-based access
-- **routers**: MikroTik router configurations
-- **token_packages**: Uniform token packages across all routers
-- **token_transactions**: Immutable audit log of all token operations
-- **usage_logs**: Bandwidth and session data from routers
-- **revenue_records**: Expected vs confirmed revenue tracking
-- **reconciliation_reports**: Daily variance analysis
-- **audit_logs**: System-wide action logging
+Create `.env` file in backend directory:
 
-See `backend/migrations/001_initial_schema.sql` for complete schema.
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=mikrotik_tokens
+DB_USER=postgres
+DB_PASSWORD=your_password
 
-## User Roles
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT
+JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=24h
+
+# Server
+PORT=3000
+NODE_ENV=development
+```
+
+### MikroTik Router Configuration
+
+1. Enable RouterOS API service
+2. Create API user with appropriate permissions
+3. Configure firewall rules for API access
+4. Set up hotspot system
+
+## 📊 User Roles
 
 ### Super Admin
-- Full system access
-- Database monitoring
-- Event logs access
+- Complete system access
+- Router management
+- User administration
 - System configuration
-- Emergency override capabilities
 
 ### Manager
-- Real-time dashboard for all locations
-- Token generation vs usage reports
-- Revenue analytics per location/staff
-- Bandwidth consumption monitoring
-- Discrepancy alerts
+- Multi-location analytics
+- Revenue reports
+- Staff performance monitoring
+- Router health oversight
 
 ### Staff
-- Token dispensing interface only
-- View own generated tokens
-- Today's revenue counter
-- Session-based access with clock in/out
+- Token generation interface
+- Personal token history
+- Daily revenue tracking
+- Session management
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration (admin only)
-
-### Tokens
-- `POST /api/tokens/generate` - Generate new token (staff)
-- `GET /api/tokens/my-tokens` - Get staff's tokens
-- `GET /api/tokens/all` - Get all tokens (manager/admin)
-
-## MikroTik Integration
-
-The system uses the `node-routeros` library to connect to MikroTik routers via RouterOS API. Each router requires:
-
-- Static IP address or VPN connection
-- API user credentials
-- Firewall rule allowing API access from central server
-
-## Security Features
+## 🔐 Security Features
 
 - JWT-based authentication
 - Role-based access control
-- Immutable audit logs
-- Rate limiting
-- Helmet.js security headers
-- Password hashing with bcrypt
+- Password encryption (bcrypt)
+- API rate limiting
+- Audit logging
+- Secure router credential storage
 
-## Development
+## 📈 Business Features
 
-### Backend Development
+- **Token Packages**: Pre-configured time/data/price combinations
+- **Revenue Tracking**: Expected vs actual revenue monitoring
+- **Reconciliation**: Automated daily variance reports
+- **Analytics**: Comprehensive business intelligence
+- **Multi-Location**: Centralized management across locations
+
+## 🌐 Production Deployment
+
+### Docker Production
+
 ```bash
-cd backend
-npm run dev  # Starts with nodemon for auto-reload
+# Production environment
+NODE_ENV=production docker-compose up -d
+
+# SSL/TLS setup recommended
+# Use reverse proxy (nginx/traefik)
+# Configure firewall rules
 ```
 
-### Frontend Development
-```bash
-cd frontend
-npm run dev  # Starts Vite dev server on port 5173
-```
+### Manual Production
 
-## Production Deployment
+1. Set `NODE_ENV=production`
+2. Configure SSL certificates
+3. Set up reverse proxy
+4. Configure firewall
+5. Set up monitoring
+6. Configure backups
 
-1. Set `NODE_ENV=production` in backend `.env`
-2. Build frontend: `cd frontend && npm run build`
-3. Serve frontend build files with a web server (nginx, etc.)
-4. Use PM2 or similar for backend process management
-5. Set up SSL certificates
-6. Configure firewall rules for database and Redis access
+## 📚 API Documentation
 
-## License
+### Authentication
+- `POST /api/auth/login` - User authentication
+- `GET /api/auth/me` - Get current user
 
-ISC
+### Token Management
+- `POST /api/tokens/generate` - Generate new token
+- `GET /api/tokens/my-tokens` - Get user's tokens
+- `GET /api/tokens/all` - Get all tokens (admin)
 
-## Support
+### Router Management
+- `GET /api/routers` - List routers
+- `POST /api/routers` - Add router
+- `POST /api/routers/:id/test` - Test connection
 
-For issues and questions, please refer to the project documentation or contact the development team.
+## 🔧 MikroTik Integration
 
+The system integrates directly with MikroTik RouterOS via API:
+
+- Automatic hotspot user creation
+- Real-time usage monitoring
+- Health status tracking
+- Bandwidth and session management
+
+## 📞 Support & Licensing
+
+This is a commercial software solution. For:
+
+- **Setup assistance**
+- **Custom configurations** 
+- **Production deployment**
+- **Training and support**
+- **Licensing information**
+
+**Contact**: [Your Contact Information]
+
+## ⚠️ Important Notes
+
+- This system requires proper MikroTik router configuration
+- Production deployment needs security hardening
+- Regular backups are essential
+- Monitor system resources in production
+
+## 🏢 Use Cases
+
+Perfect for:
+- Internet cafes
+- Hotspot providers
+- Guest WiFi management
+- Temporary access solutions
+- Multi-location businesses
+
+---
+
+**Professional MikroTik token management made simple.** 
+
+For complete setup guides, configuration details, and support, please contact us directly.
