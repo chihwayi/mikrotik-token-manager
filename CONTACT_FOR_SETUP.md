@@ -36,10 +36,10 @@ For the **complete working system** including:
 ## 📧 Get Started Today
 
 **Contact Information:**
-- **Email**: [Your Email]
-- **WhatsApp**: [Your WhatsApp]
-- **Telegram**: [Your Telegram]
-- **Website**: [Your Website]
+- **Email**: chihwayii@outlook.com
+- **WhatsApp**: +263 77 123 4567
+- **Telegram**: @chihwayii
+- **Website**: Available upon request
 
 ## 💰 Investment Options
 

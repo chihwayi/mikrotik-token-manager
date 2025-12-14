@@ -200,7 +200,7 @@ This is a commercial software solution. For:
 - **Training and support**
 - **Licensing information**
 
-**Contact**: [Your Contact Information]
+**Contact**: chihwayii@outlook.com
 
 ## ⚠️ Important Notes
 
@@ -222,4 +222,4 @@ Perfect for:
 
 **Professional MikroTik token management made simple.** 
 
-For complete setup guides, configuration details, and support, please contact us directly.
+For complete setup guides, configuration details, and support, please contact me directly.
