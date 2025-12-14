@@ -10,7 +10,12 @@ const KEY_LENGTH = 32;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(KEY_LENGTH).toString('hex');
 
 function getKey() {
-  return Buffer.from(ENCRYPTION_KEY.slice(0, KEY_LENGTH * 2), 'hex');
+  // If key is hex format, use it directly
+  if (ENCRYPTION_KEY.length === KEY_LENGTH * 2 && /^[0-9a-fA-F]+$/.test(ENCRYPTION_KEY)) {
+    return Buffer.from(ENCRYPTION_KEY, 'hex');
+  }
+  // Otherwise, create hash from string to get 32 bytes
+  return crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
 }
 
 export function encrypt(text) {

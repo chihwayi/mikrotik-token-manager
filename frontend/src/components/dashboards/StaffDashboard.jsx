@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { tokenAPI, packageAPI, authAPI, pdfAPI } from '../../services/api';
-import { Copy, CheckCircle, XCircle, Clock, DollarSign, Sparkles, TrendingUp, User, LogOut, Router, Package, FileText, Plus, Minus, Download } from 'lucide-react';
+import { Copy, CheckCircle, XCircle, Clock, DollarSign, Sparkles, TrendingUp, User, LogOut, Router, Package, FileText, Plus, Minus, Download, Shield, Wifi } from 'lucide-react';
+import VPNManager from '../VPNManager';
 
 const StaffDashboard = () => {
   const { user, logout } = useAuth();
@@ -19,6 +20,7 @@ const StaffDashboard = () => {
   const [bulkSelections, setBulkSelections] = useState({}); // {packageId: quantity}
   const [bulkLoading, setBulkLoading] = useState(false);
   const [lastBulkTokens, setLastBulkTokens] = useState([]);
+  const [activeTab, setActiveTab] = useState('tokens'); // 'tokens' or 'vpn'
 
   useEffect(() => {
     console.log('StaffDashboard: useEffect triggered');
@@ -325,8 +327,43 @@ const StaffDashboard = () => {
       )}
 
       <main className="max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 lg:px-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('tokens')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'tokens'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Wifi className="w-4 h-4" />
+                  <span>Hotspot Tokens</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('vpn')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'vpn'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Shield className="w-4 h-4" />
+                  <span>VPN Access</span>
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+        {activeTab === 'tokens' && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="stat-card card-hover">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 sm:p-4 shadow-lg">
@@ -375,9 +412,9 @@ const StaffDashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
           {/* Token Generator */}
           <div className="card animate-slide-up">
             <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -744,8 +781,11 @@ const StaffDashboard = () => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'vpn' && <VPNManager />}
       </main>
 
       <style>{`
