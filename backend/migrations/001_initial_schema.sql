@@ -163,6 +163,17 @@ CREATE INDEX idx_sessions_active ON sessions(active);
 ALTER TABLE users ADD CONSTRAINT fk_users_router 
     FOREIGN KEY (assigned_router_id) REFERENCES routers(id);
 
+-- Add Zimbabwe Province, District, Town fields to routers table
+ALTER TABLE routers 
+ADD COLUMN IF NOT EXISTS province VARCHAR(100),
+ADD COLUMN IF NOT EXISTS district VARCHAR(100),
+ADD COLUMN IF NOT EXISTS town VARCHAR(100);
+
+-- Add indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_routers_province ON routers(province);
+CREATE INDEX IF NOT EXISTS idx_routers_district ON routers(district);
+CREATE INDEX IF NOT EXISTS idx_routers_town ON routers(town);
+
 -- Insert default token packages
 INSERT INTO token_packages (name, duration_hours, data_limit_mb, price, description) VALUES
 ('1 Hour Package', 1, 500, 1.00, '1 hour browsing with 500MB data'),

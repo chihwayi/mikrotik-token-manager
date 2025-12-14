@@ -153,9 +153,19 @@ class PDFService {
                 }
               }
 
-              // Voucher code (below QR code)
-              const codeY = cardY + 42;
-              doc.fontSize(9)
+              // Instructions (below QR code)
+              const instructY = cardY + 40;
+              doc.fontSize(6)
+                 .fillColor('#4B5563')
+                 .font('Helvetica')
+                 .text('Username & Password:', xPos + 4, instructY, {
+                   width: tokenWidth - 8,
+                   align: 'center'
+                 });
+
+              // Voucher code
+              const codeY = cardY + 50;
+              doc.fontSize(8)
                  .fillColor('#000000')
                  .font('Helvetica-Bold')
                  .text(token.voucher_code, xPos + 4, codeY, {
@@ -169,13 +179,13 @@ class PDFService {
                 doc.fontSize(7)
                    .font('Helvetica-Bold')
                    .fillColor('#1F2937')
-                   .text(pkg.name || 'Package', xPos + 4, cardY + 56, {
+                   .text(pkg.name || 'Package', xPos + 4, cardY + 62, {
                      width: tokenWidth - 8,
                      align: 'center'
                    });
 
                 // Package details - single compact line
-                const detailsY = cardY + 66;
+                const detailsY = cardY + 72;
                 doc.fontSize(5.5)
                    .font('Helvetica')
                    .fillColor('#4B5563')
@@ -188,7 +198,7 @@ class PDFService {
                 doc.fontSize(8)
                    .font('Helvetica-Bold')
                    .fillColor('#2563EB')
-                   .text(`$${pkg.price}`, xPos + 4, cardY + 74, {
+                   .text(`$${pkg.price}`, xPos + 4, cardY + 82, {
                      width: tokenWidth - 8,
                      align: 'center'
                    });
