@@ -39,7 +39,10 @@ const SuperAdminDashboard = () => {
     router_model: '',
     province: '',
     district: '',
-    town: ''
+    town: '',
+    zerotier_ip: '',
+    tailscale_ip: '',
+    connection_priority: 'auto'
   });
   const [availableDistricts, setAvailableDistricts] = useState([]);
   const [showPackageForm, setShowPackageForm] = useState(false);
@@ -159,7 +162,7 @@ const SuperAdminDashboard = () => {
       console.log('Router creation response:', response);
       toast.success('Router created successfully!');
       setShowRouterForm(false);
-      setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '' });
+      setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '', zerotier_ip: '', tailscale_ip: '', connection_priority: 'auto' });
       setAvailableDistricts([]);
       loadData();
     } catch (error) {
@@ -194,7 +197,7 @@ const SuperAdminDashboard = () => {
       await routerAPI.update(editingRouter.id, routerForm);
       toast.success('Router updated successfully!');
       setEditingRouter(null);
-      setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '' });
+      setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '', zerotier_ip: '', tailscale_ip: '', connection_priority: 'auto' });
       setAvailableDistricts([]);
       loadData();
     } catch (error) {
@@ -410,7 +413,7 @@ const SuperAdminDashboard = () => {
                     onClick={() => {
                     setShowRouterForm(true);
                     setEditingRouter(null);
-                    setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '' });
+                    setRouterForm({ name: '', location: '', ip_address: '', api_port: 8728, api_username: '', apiPassword: '', router_model: '', province: '', district: '', town: '', zerotier_ip: '', tailscale_ip: '', connection_priority: 'auto' });
                     setAvailableDistricts([]);
                     }}
                     className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto"
@@ -984,6 +987,46 @@ const SuperAdminDashboard = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="RB750Gr3"
                     />
+                  </div>
+                </div>
+
+                {/* Row 6: Remote Connection Options */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-bold text-gray-800 mb-3">🌐 Remote Connection Options</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">ZeroTier IP</label>
+                      <input
+                        type="text"
+                        value={routerForm.zerotier_ip || ''}
+                        onChange={(e) => setRouterForm({ ...routerForm, zerotier_ip: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                        placeholder="192.168.100.10"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Tailscale IP</label>
+                      <input
+                        type="text"
+                        value={routerForm.tailscale_ip || ''}
+                        onChange={(e) => setRouterForm({ ...routerForm, tailscale_ip: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                        placeholder="100.64.1.10"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Connection Priority</label>
+                    <select
+                      value={routerForm.connection_priority || 'auto'}
+                      onChange={(e) => setRouterForm({ ...routerForm, connection_priority: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="auto">🔄 Auto (try all methods)</option>
+                      <option value="zerotier">🌐 ZeroTier only</option>
+                      <option value="tailscale">🔗 Tailscale only</option>
+                      <option value="direct">📡 Direct IP only</option>
+                    </select>
                   </div>
                 </div>
                 <div className="flex space-x-3 pt-4">

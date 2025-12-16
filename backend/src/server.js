@@ -70,17 +70,56 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  
-  // Start background jobs (only in production or when explicitly enabled)
-  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_JOBS === 'true') {
-    console.log('Starting background jobs...');
-    syncRoutersJob.start(5); // Sync every 5 minutes
-    healthCheckJob.start(5); // Health check every 5 minutes
-    dailyReconciliationJob.start(); // Daily reconciliation at 1 AM
-    console.log('Background jobs started');
+// Auto-run migrations on startup
+async function initializeDatabase() {
+  try {
+    console.log('🔄 Running database migrations...');
+    const { spawn } = await import('child_process');
+    
+    return new Promise((resolve, reject) => {
+      const migration = spawn('node', ['migrations/run.js'], {
+        cwd: process.cwd(),
+        stdio: 'inherit'
+      });
+      
+      migration.on('close', (code) => {
+        if (code === 0) {
+          console.log('✅ Database migrations completed');
+          resolve();
+        } else {
+          reject(new Error(`Migration failed with code ${code}`));
+        }
+      });
+    });
+  } catch (error) {
+    console.error('❌ Migration error:', error);
+    throw error;
   }
-});
+}
+
+// Initialize and start server
+async function startServer() {
+  try {
+    await initializeDatabase();
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+      
+      // Start background jobs (only in production or when explicitly enabled)
+      if (process.env.NODE_ENV === 'production' || process.env.ENABLE_JOBS === 'true') {
+        console.log('⚙️  Starting background jobs...');
+        syncRoutersJob.start(5); // Sync every 5 minutes
+        healthCheckJob.start(5); // Health check every 5 minutes
+        dailyReconciliationJob.start(); // Daily reconciliation at 1 AM
+        console.log('✅ Background jobs started');
+      }
+    });
+  } catch (error) {
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 

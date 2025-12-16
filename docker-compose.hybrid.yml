@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  zerotier:
+    image: zerotier/zerotier:latest
+    container_name: mikrotik-zerotier
+    environment:
+      - ZEROTIER_NETWORK_ID=${ZEROTIER_NETWORK_ID}
+      - ZEROTIER_API_SECRET=${ZEROTIER_API_SECRET}
+    volumes:
+      - zerotier-data:/var/lib/zerotier-one
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    restart: unless-stopped
+    networks:
+      - mikrotik_network
+
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: mikrotik_tokens
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ProductionPassword123!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - mikrotik_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - mikrotik_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - HOST_IP=173.212.195.88
+      - ZEROTIER_ENABLED=true
+      - DYNAMIC_CONNECTION=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      zerotier:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - mikrotik_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - mikrotik_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  zerotier_data:
+
+networks:
+  mikrotik_network:
+    driver: bridge

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn-server
+    ports:
+      - "1194:1194/udp"
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - openvpn-data:/etc/openvpn
+    networks:
+      - vpn_network
+
+volumes:
+  openvpn-data:
+
+networks:
+  vpn_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.8.0.0/24

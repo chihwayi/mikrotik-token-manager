@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "migrate": "node migrations/run.js",
+    "migrate:force": "node migrations/run.js --force",
     "seed": "node scripts/seed-users.js",
     "test:mikrotik": "node scripts/test-mikrotik-connection.js"
   },
