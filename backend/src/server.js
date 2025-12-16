@@ -11,6 +11,7 @@ import routerRoutes from './routes/routers.js';
 import packageRoutes from './routes/packages.js';
 import analyticsRoutes from './routes/analytics.js';
 import adminRoutes from './routes/admin.js';
+import vpnRoutes from './routes/vpn.js';
 
 // Background jobs
 import syncRoutersJob from './jobs/syncRouters.js';
@@ -42,6 +43,7 @@ app.use('/api/routers', routerRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/vpn', vpnRoutes);
 
 // PDF routes (loaded conditionally)
 let pdfRoutesLoaded = false;
