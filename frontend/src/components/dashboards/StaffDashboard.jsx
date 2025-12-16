@@ -782,6 +782,7 @@ const StaffDashboard = () => {
               )}
             </div>
             </div>
+            </div>
           </>
         )}
 
